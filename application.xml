@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<application xmlns="http://ns.adobe.com/air/application/20.0">
+  <id>SwfPackingSample</id>
+  <versionNumber>1.0</versionNumber>
+  <filename>SwfPackingSample</filename>
+  <name>SwfPackingSample</name>
+  <initialWindow>
+    <title>SwfPackingSample</title>
+    <content>SwfPackingSample.swf</content>
+    <systemChrome>standard</systemChrome>
+    <transparent>false</transparent>
+    <visible>true</visible>
+    <minimizable>true</minimizable>
+    <maximizable>true</maximizable>
+    <resizable>true</resizable>
+    <aspectRatio>any</aspectRatio>
+    <renderMode>direct</renderMode>
+    <autoOrients>true</autoOrients>
+    <fullScreen>true</fullScreen>
+    <softKeyboardBehavior>none</softKeyboardBehavior>
+    <depthAndStencil>true</depthAndStencil>
+  </initialWindow>
+  <!-- 
+	More options:
+	http://livedocs.adobe.com/flex/3/html/File_formats_1.html#1043413
+	-->
+  <android>
+    <manifestAdditions><![CDATA[<manifest android:installLocation="auto" xmlns:android="http://schemas.android.com/apk/res/android" />]]></manifestAdditions>
+  </android>
+</application>
