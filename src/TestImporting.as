@@ -21,7 +21,7 @@ package
 	 */
 	public class TestImporting extends Sprite 
 	{
-		private var fileName:String = "girl.swf";
+		private var fileName:String = "testShapeCut.swf";
 		private var fileContent:ByteArray;
 		private var swfExporter:SwfExporter = new SwfExporter();
 		private var testScene:TestScene;
@@ -39,14 +39,14 @@ package
 		
 		private function onStartParse(e:Event):void 
 		{
-			//openAndLoadContent();
-			browseContetn();
+			openAndLoadContent();
+			//browseContetn();
 			
 		}
 		
 		private function browseContetn():void 
 		{
-			file = new File("D:\panda\village\trunk-static\root\swf\actor\skin_summer\complex_decor");//File.documentsDirectory.clone();
+			file = new File("C://Users//k.klementyev//AppData//Local//Temp//swfpacker-cache//animation//actor//skin_summer/fruit_tree");//File.documentsDirectory.clone();
 			
 			file.browseForOpen("Select animation file", [new FileFilter("Packed animation file", "*.animation", "*.animation")]);
 			file.addEventListener(Event.SELECT, onSelected);

@@ -14,7 +14,7 @@
     </define>
     <define append="true">
       <name>CONFIG::timeStamp</name>
-      <value>'16.02.2016'</value>
+      <value>'20.02.2016'</value>
     </define>
     <define append="true">
       <name>CONFIG::air</name>
@@ -36,7 +36,7 @@
       <path-element>D:\dev\libs\swfpacker\src</path-element>
       <path-element>D:\dev\libs\swfdrawer\src</path-element>
       <path-element>D:\dev\libs\swfexporter\src</path-element>
-      <path-element>D:\dev\libs\codeazure\src</path-element>
+      <path-element>D:\dev\as3swf\src</path-element>
       <path-element>D:\panda\trunk\client\Tools\as\swf_rasterizer_animation\src</path-element>
       <path-element>D:\swf-packer-repo\utilityUi\src</path-element>
       <path-element>D:\swf-packer-repo\debugUtils\src</path-element>
@@ -47,7 +47,7 @@
     </library-path>
   </compiler>
   <file-specs>
-    <path-element>D:\swf-packer-repo\swf-packing-tool\src\web\WebAppStartUp.as</path-element>
+    <path-element>D:\swf-packer-repo\swf-packing-tool\src\TestImporting.as</path-element>
   </file-specs>
   <default-background-color>#C0C0C0</default-background-color>
   <default-frame-rate>30</default-frame-rate>

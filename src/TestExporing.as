@@ -38,8 +38,8 @@ package
 			
 			var t:Timer = new Timer(50, 1);
 			t.addEventListener(TimerEvent.TIMER_COMPLETE, onStartParse);
-			//t.start();
-			browseContetn();
+			t.start();
+			//browseContetn();
 		}
 		
 		private function quickHash(a:Number, b:Number):Number
@@ -49,6 +49,7 @@ package
 		
 		private function onStartParse(e:TimerEvent = null):void 
 		{
+			file= File.documentsDirectory.resolvePath("testShapeCut" + ".swf");
 			openAndLoadContent();
 			parseSwfData();
 			packRectangles();
@@ -98,7 +99,7 @@ package
 		private function rebuildAtlas():void 
 		{
 			var atlasSoruce:BitmapData = maxRectPacker.drawAtlas(0);
-			packedAtlas = new BitmapTextureAtlas(atlasSoruce.width, atlasSoruce.height, 2);
+			packedAtlas = new BitmapTextureAtlas(atlasSoruce.width, atlasSoruce.height, 4);
 			packedAtlas.atlasData = atlasSoruce;
 			
 			var rects:Vector.<PackerRectangle> = maxRectPacker.atlasDatas[0].rectangles;

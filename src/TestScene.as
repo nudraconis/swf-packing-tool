@@ -61,6 +61,7 @@ package
 			showAtlasButton.addEventListener(MouseEvent.CLICK, showAtlas);
 			
 			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+			
 		
 			trace('constructing genome');
 			var genome:Genome2D = Genome2D.getInstance();
@@ -69,7 +70,7 @@ package
 			var cfg:GContextConfig = new GContextConfig(stage);
 			cfg.profile = Context3DProfile.BASELINE;
 			cfg.useFastMem = true;
-			cfg.hdResolution = false;
+			cfg.hdResolution = true;
 			cfg.antiAliasing = 0;
 			cfg.renderMode = Context3DRenderMode.AUTO;
 			cfg.enableDepthAndStencil = true;
@@ -170,6 +171,8 @@ package
 						(spriteAsTimeline.getChildByName('animation') as MovieClipData).play();
 				}
 			}
+			
+			trace(sprite.libraryLinkage, sprite.name);
 		}
 		
 		
@@ -184,6 +187,10 @@ package
 				return;
 				
 			graphics.clear();
+			
+			
+			
+			
 			numPoint = 0;
 			
 			mousePoint.x = mouseX;
@@ -194,15 +201,30 @@ package
 				
 			bounding.setTo(0, 0, 0, 0);
 			debugDrawer.debugConvas = this.graphics;
+			
+			debugDrawer.checkBounds = false;
+			debugDrawer.debugDraw = false;
+			
+			
 			debugDrawer.drawDisplayObject(sprite, new Matrix(1, 0, 0, 1, 400, 300), true, false, false, -1, bounding);
+			debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake11110001"), new Matrix(1, 0, 0, 1, 400, 300 + 37.4), true, false, false, -1, bounding);
 			
 		
 			
-			graphics.lineStyle(1, 0);
-			graphics.drawRect(bounding.x, bounding.y, bounding.width, bounding.height);
+			//graphics.lineStyle(1, 0);
+			//graphics.drawRect(bounding.x, bounding.y, bounding.width, bounding.height);
 			
-			//definitionUiContainer.buildControls(sprite);
-			//definitionUiContainer.update();
+			graphics.lineStyle(1, 0x00FF00, 0.5);
+			graphics.moveTo(stage.stageWidth / 2, 0);
+			graphics.lineTo(stage.stageWidth / 2, stage.stageHeight);
+			
+			graphics.lineStyle(1, 0xFF0000, 0.5);
+			graphics.moveTo(0, stage.stageHeight / 2);
+			graphics.lineTo(stage.stageWidth, stage.stageHeight / 2);
+		
+			
+			definitionUiContainer.buildControls(sprite);
+			definitionUiContainer.update();
 			
 			//trace(bounding);
 			
