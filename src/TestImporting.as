@@ -39,8 +39,8 @@ package
 		
 		private function onStartParse(e:Event):void 
 		{
-			openAndLoadContent();
-			//browseContetn();
+			//openAndLoadContent();
+			browseContetn();
 			
 		}
 		

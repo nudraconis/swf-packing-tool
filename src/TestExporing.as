@@ -34,12 +34,12 @@ package
 		{
 			super();
 			
-			//var file:File = File.applicationDirectory.resolvePath(fileName + ".swf");
+			//file= File.documentsDirectory.resolvePath("testShapeCut" + ".swf");
 			
 			var t:Timer = new Timer(50, 1);
 			t.addEventListener(TimerEvent.TIMER_COMPLETE, onStartParse);
-			t.start();
-			//browseContetn();
+			//t.start();
+			browseContetn();
 		}
 		
 		private function quickHash(a:Number, b:Number):Number
@@ -49,7 +49,6 @@ package
 		
 		private function onStartParse(e:TimerEvent = null):void 
 		{
-			file= File.documentsDirectory.resolvePath("testShapeCut" + ".swf");
 			openAndLoadContent();
 			parseSwfData();
 			packRectangles();

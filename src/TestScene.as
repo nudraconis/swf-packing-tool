@@ -205,9 +205,17 @@ package
 			debugDrawer.checkBounds = false;
 			debugDrawer.debugDraw = false;
 			
+			debugDrawer.smooth = false;
 			
+			//trace("T");
 			debugDrawer.drawDisplayObject(sprite, new Matrix(1, 0, 0, 1, 400, 300), true, false, false, -1, bounding);
-			debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake11110001"), new Matrix(1, 0, 0, 1, 400, 300 + 37.4), true, false, false, -1, bounding);
+			
+			//debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake11110001"), new Matrix(1, 0, 0, 1, 400, 300 + 37.45), true, false, false, -1, bounding);
+			
+			//debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake1110000"), new Matrix(1, 0, 0, 1, 400 + -37.45, 300 + 37.45 / 2), true, false, false, -1, bounding);
+			
+			//debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake111"), new Matrix(1, 0, 0, 1, 400 + 37.45, 300 + 37.45 / 2), true, false, false, -1, bounding);
+			
 			
 		
 			
