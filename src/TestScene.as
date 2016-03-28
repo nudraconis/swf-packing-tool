@@ -3,8 +3,10 @@ package
 	import com.genome2d.context.GContextConfig;
 	import com.genome2d.context.stats.GStats;
 	import com.genome2d.Genome2D;
+	import com.genome2d.textures.GTexture;
 	import com.genome2d.textures.GTextureFilteringType;
 	import com.genome2d.textures.GTextureManager;
+	import flash.display.BitmapData;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
 	import flash.display3D.Context3DProfile;
@@ -18,9 +20,13 @@ package
 	import flash.ui.Keyboard;
 	import swfdata.atlas.GenomeTextureAtlas;
 	import swfdata.MovieClipData;
+	import swfdata.Rectagon;
 	import swfdata.SpriteData;
 	import swfdata.SymbolsLibrary;
+	import swfdrawer.DisplayListDrawer;
 	import ui.TextButton;
+	import view.genome.filters.AdjustColor;
+	import view.genome.filters.RepeatFill;
 	
 	public class TestScene extends Sprite 
 	{
@@ -70,7 +76,7 @@ package
 			var cfg:GContextConfig = new GContextConfig(stage);
 			cfg.profile = Context3DProfile.BASELINE;
 			cfg.useFastMem = true;
-			cfg.hdResolution = true;
+			cfg.hdResolution = false;
 			cfg.antiAliasing = 0;
 			cfg.renderMode = Context3DRenderMode.AUTO;
 			cfg.enableDepthAndStencil = true;
@@ -124,6 +130,48 @@ package
 		private var libLookupIndex:int = 0;
 		private function onKeyDown(e:KeyboardEvent):void 
 		{
+			if (e.keyCode == Keyboard.T)
+			{
+				size-= 0.2;
+				backgroundBorder.setSize(size);
+				AdjustColor.brightness += 0.1;
+				
+			}
+			else if (e.keyCode == Keyboard.R)
+			{
+				size+= 0.2;
+				backgroundBorder.setSize(size);
+				AdjustColor.brightness -= 0.1;
+				
+			}
+			if (e.keyCode == Keyboard.F)
+			{
+				ratio-=0.1;
+				AdjustColor.contrast += 0.1;
+				
+			}
+			else if (e.keyCode == Keyboard.G)
+			{
+				ratio+=0.1
+				AdjustColor.contrast -= 0.1;
+				
+			}
+			if (e.keyCode == Keyboard.V)
+			{
+				AdjustColor.saturation += 0.1;
+				
+			}
+			else if (e.keyCode == Keyboard.B)
+			{
+				AdjustColor.saturation -= 0.1;
+				
+			}
+			
+			trace("ADJUST COLOR")
+			trace("brightness", AdjustColor.brightness);
+			trace("contrast", AdjustColor.contrast);
+			trace("saturation", AdjustColor.saturation);
+			
 			if (e.keyCode == Keyboard.Q)
 			{
 				for (;libLookupIndex < library.spritesList.length; libLookupIndex++)
@@ -156,6 +204,11 @@ package
 					
 				frame = 0;
 			}
+			else if (e.keyCode == Keyboard.R)
+			{
+				sprite.alpha = Math.random();
+				trace("Alpha", sprite.alpha);
+			}
 			else if (e.keyCode == Keyboard.SPACE)
 			{
 				if (sprite is MovieClipData)
@@ -180,6 +233,31 @@ package
 		private var frame:int = 0;
 		private var bounding:Rectangle = new Rectangle();
 		private var mousePoint:Point = new Point();
+		private var size:Number = 3;
+		private var ratio:Number = 0.0;
+		
+		private var backgroundBorder:BackgroundBorder;
+		
+		public function drawRect():void
+		{
+			
+			var text:GTexture = GTextureManager.getTexture("neibor_border");
+			if (text == null)
+			{
+				var bmp:BitmapData = new BitmapData(64, 64, true, 0x0);
+				var m:Matrix = new Matrix();
+				//m.scale(64 / 48, 64 / 48);
+				bmp.draw(new neibor_border, m);
+				text = GTextureManager.createTexture("neibor_border", bmp, 32/64, true);
+				text.filteringType = GTextureFilteringType.LINEAR;
+				
+				backgroundBorder = new BackgroundBorder(text, 5);
+			}
+			
+			backgroundBorder.draw(400, 300);
+			
+			Genome2D.g2d_instance.g2d_context.drawMatrix(text, 1, 0, 0, 1, 400, 300);
+		}
 		
 		private function onFrame(e:Event = null):void 
 		{
@@ -202,13 +280,18 @@ package
 			bounding.setTo(0, 0, 0, 0);
 			debugDrawer.debugConvas = this.graphics;
 			
-			debugDrawer.checkBounds = false;
-			debugDrawer.debugDraw = false;
+			debugDrawer.checkBounds = true;
+			debugDrawer.debugDraw = true;
+			debugDrawer.checkMouseHit = true;
 			
-			debugDrawer.smooth = false;
+			debugDrawer.smooth = true;
 			
-			//trace("T");
-			debugDrawer.drawDisplayObject(sprite, new Matrix(1, 0, 0, 1, 400, 300), true, false, false, -1, bounding);
+			var direction:Number = 1;
+			
+			sprite.transform.a = 2 * direction;
+			sprite.transform.d = 2;
+			
+			debugDrawer.drawDisplayObject(sprite, new Matrix(1, 0, 0, 1, 400, 300), bounding);
 			
 			//debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake11110001"), new Matrix(1, 0, 0, 1, 400, 300 + 37.45), true, false, false, -1, bounding);
 			
@@ -216,20 +299,21 @@ package
 			
 			//debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake111"), new Matrix(1, 0, 0, 1, 400 + 37.45, 300 + 37.45 / 2), true, false, false, -1, bounding);
 			
+			//drawRect();
 			
-		
+			//Genome2D.g2d_instance.g2d_context.drawPoly(text, [ -50, -50, 50, -50, 50, 50, 50, 50, -50, 50, -50, -50 ], [0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0], 400, 350);
 			
 			//graphics.lineStyle(1, 0);
 			//graphics.drawRect(bounding.x, bounding.y, bounding.width, bounding.height);
 			
-			graphics.lineStyle(1, 0x00FF00, 0.5);
+			/*graphics.lineStyle(1, 0x00FF00, 0.5);
 			graphics.moveTo(stage.stageWidth / 2, 0);
 			graphics.lineTo(stage.stageWidth / 2, stage.stageHeight);
 			
 			graphics.lineStyle(1, 0xFF0000, 0.5);
 			graphics.moveTo(0, stage.stageHeight / 2);
 			graphics.lineTo(stage.stageWidth, stage.stageHeight / 2);
-		
+				*/
 			
 			definitionUiContainer.buildControls(sprite);
 			definitionUiContainer.update();

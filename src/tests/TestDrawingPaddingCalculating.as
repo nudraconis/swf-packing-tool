@@ -31,7 +31,7 @@ package tests
 			var targetAtlas:BitmapTextureAtlas = new BitmapTextureAtlas(1024, 1024, padding);
 			var atlasDrawer:AtlasDrawer = new AtlasDrawer(targetAtlas, 1, padding);
 			
-			var sample:Sprite = new lake1110000;
+			var sample:Sprite = new Tween41;
 			var sampleShape:Shape = sample.getChildAt(0) as Shape;
 			var shapeBounds:Rectangle = sampleShape.getBounds(sample);
 			//Создаем семпл и извлекаем из него шейп и баунд
@@ -41,6 +41,9 @@ package tests
 			
 			//Рисуем шейп в атлас и получаем новый баунд
 			var boundRectnagle:Rectangle = atlasDrawer.addShape(0, sampleShape, sampleShape.getBounds(sample), new TextureTransform(testScaleX, testScaleY, shapeBounds.x, shapeBounds.y));
+			
+			boundRectnagle.x += 35;
+			boundRectnagle.y += 25;
 			
 			//Задаем баунд для шейпа из атласа
 			shapeBounds.width = boundRectnagle.width;
@@ -67,8 +70,8 @@ package tests
 			checkerView.bitmapData.floodFill(1, 1, 0xFFFF0000);
 			
 			
-			sample.x = 0;
-			sample.y = 0;
+			sample.x = 35;
+			sample.y = 25;
 			sample.scaleX = testScaleX;
 			sample.scaleY = testScaleY;
 			sample.alpha = 0.8;

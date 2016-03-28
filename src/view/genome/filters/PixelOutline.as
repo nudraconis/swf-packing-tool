@@ -10,7 +10,7 @@ package view.genome.filters
 	 */
 	public class PixelOutline extends GFilter 
 	{
-		public var size:Number = 1;
+		public var size:Number = 0.2;
 		public var red:Number = 1;
 		public var green:Number = 1;
 		public var blue:Number = 1;
@@ -25,8 +25,8 @@ package view.genome.filters
 								"mov	ft1	v0					\n" //vr buffer
 							+	"mov	ft3	v0					\n" //position buffer
 								 
-							//+	"tex	ft0	v0	fs0"				//main texture sample	#removed because need only outline shape
-							//+	"	<2d,linear,mipnone,clamp>	\n"
+							+	"tex	ft0	v0	fs0"				//main texture sample	#removed because need only outline shape
+							+	"	<2d,linear,mipnone,clamp>	\n"
 								 
 							+	"add	ft3.x	ft1.x	fc1.x	\n" //left border position
 							+	"tex	ft2		ft3		fs0"		//sample left border texture
@@ -51,13 +51,13 @@ package view.genome.filters
 							
 							+	"sat	ft2.w	ft2.w			\n" //Math.max(Math.min(alpha, 1), 0); because wee need alpha tob be <=1
 							
-							//+	"sub	ft2.w	ft2.w	ft0.w	\n" //cut mask and get only border #removed because need only outline shape
+							+	"sub	ft2.w	ft2.w	ft0.w	\n" //cut mask and get only border #removed because need only outline shape
 							
 							+	"mul	ft2.xyz	fc2.xyz	ft2.wwww \n"//colorize
 							
 							//+	"add	ft0		ft2		ft0	\n" //add outline to result pixel #removed because need only outline shape
 							
-							+	"mov oc, ft2"
+							+	"mov oc, ft2" 
 							
 				
 			fragmentConstants = new <Number>[

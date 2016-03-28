@@ -21,7 +21,7 @@ package
 	 */
 	public class TestImporting extends Sprite 
 	{
-		private var fileName:String = "testShapeCut.swf";
+		private var fileName:String = "boy";
 		private var fileContent:ByteArray;
 		private var swfExporter:SwfExporter = new SwfExporter();
 		private var testScene:TestScene;
@@ -32,21 +32,22 @@ package
 			super();
 			
 
-			var t:Timer = new Timer(50, 1);
+			var t:Timer = new Timer(1000, 1);
 			t.addEventListener(TimerEvent.TIMER_COMPLETE, onStartParse);
 			t.start();
 		}
 		
 		private function onStartParse(e:Event):void 
 		{
-			//openAndLoadContent();
-			browseContetn();
+			openAndLoadContent();
+			//browseContetn();
 			
 		}
 		
 		private function browseContetn():void 
 		{
-			file = new File("C://Users//k.klementyev//AppData//Local//Temp//swfpacker-cache//animation//actor//skin_summer/fruit_tree");//File.documentsDirectory.clone();
+			//file = new File("C://Users//k.klementyev//AppData//Local//Temp//swfpacker-cache//animation//actor//skin_summer/fruit_tree");
+			file = File.documentsDirectory.clone();
 			
 			file.browseForOpen("Select animation file", [new FileFilter("Packed animation file", "*.animation", "*.animation")]);
 			file.addEventListener(Event.SELECT, onSelected);
@@ -67,6 +68,7 @@ package
 		private function unpack():void 
 		{
 			testScene = new TestScene();
+			
 			testScene.addEventListener(Event.COMPLETE, onGenomeReady);
 			
 			stage.addChild(testScene);

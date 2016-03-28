@@ -1,20 +1,23 @@
 package 
 {
-	import flash.events.Event;
-	import flash.net.FileFilter;
-	import swfDataExporter.SwfExporter;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
 	import flash.geom.Rectangle;
+	import flash.net.FileFilter;
 	import flash.utils.ByteArray;
 	import flash.utils.Timer;
 	import swfdata.atlas.BitmapSubTexture;
 	import swfdata.atlas.BitmapTextureAtlas;
+	import swfdata.atlas.GenomeTextureAtlas;
+	import swfdata.dataTags.SwfPackerTag;
+	import swfDataExporter.SwfExporter;
 	import swfparser.SwfDataParser;
+	import swfparser.SwfParserLight;
 	import util.MaxRectPacker;
 	import util.PackerRectangle;
 	
@@ -25,21 +28,23 @@ package
 		private var fileContent:ByteArray;
 		private var swfDataParser:SwfDataParser;
 		private var packedAtlas:BitmapTextureAtlas;
-		private var maxRectPacker:MaxRectPacker;
-		private var data:ByteArray;
+		private var maxRectPacker:MaxRectPacker = new MaxRectPacker();
+		private var data:ByteArray = new ByteArray();
 		private var swfExporter:SwfExporter;
 		private var file:File;
+		
+		private var testScene:TestScene;
 		
 		public function TestExporing() 
 		{
 			super();
 			
-			//file= File.documentsDirectory.resolvePath("testShapeCut" + ".swf");
+			file= File.documentsDirectory.resolvePath("boy" + ".swf");
 			
-			var t:Timer = new Timer(50, 1);
+			var t:Timer = new Timer(1000, 1);
 			t.addEventListener(TimerEvent.TIMER_COMPLETE, onStartParse);
-			//t.start();
-			browseContetn();
+			t.start();
+			//browseContetn();
 		}
 		
 		private function quickHash(a:Number, b:Number):Number
@@ -54,7 +59,7 @@ package
 			packRectangles();
 			rebuildAtlas();
 			packData();
-			//unpackData();
+			unpackData();
 		}
 		
 		private function browseContetn():void 
@@ -72,15 +77,36 @@ package
 		
 		private function unpackData():void 
 		{
-			swfDataParser.packerTags.length = 0;
+			//swfDataParser.packerTags.length = 0;
+			//data.position = 0;
+			//var atlas:BitmapTextureAtlas = swfExporter.importSwf(data, swfDataParser.context.shapeLibrary, swfDataParser.packerTags);
+			
+			testScene = new TestScene();
+			testScene.addEventListener(Event.COMPLETE, onGenomeReady);
+			
+			stage.addChild(testScene);
+		}
+		
+		private function onGenomeReady(e:Event):void 
+		{
+			var swfParserLight:SwfParserLight = new SwfParserLight();
+			var swfTags:Vector.<SwfPackerTag> = new Vector.<SwfPackerTag>;
+			
 			data.position = 0;
-			var atlas:BitmapTextureAtlas = swfExporter.importSwf(data, swfDataParser.context.shapeLibrary, swfDataParser.packerTags);
+			
+			var genomeTextureAtlas:GenomeTextureAtlas = swfExporter.importSwfGenome("noname", data, swfParserLight.context.shapeLibrary, swfTags);
+			
+			swfParserLight.context.library.addShapes(swfParserLight.context.shapeLibrary);
+			swfParserLight.processDisplayObject(swfTags);
+			
+			
+			testScene.show(swfParserLight.context.library, genomeTextureAtlas);
 		}
 		
 		private function packData():void 
 		{
 			swfExporter = new SwfExporter();
-			var data:ByteArray = new ByteArray();
+			
 			swfExporter.exportSwf(packedAtlas, swfDataParser.context.shapeLibrary, swfDataParser.packerTags, data);
 			
 			var file:File = File.documentsDirectory.resolvePath(this.file.name + ".animation");
@@ -91,7 +117,7 @@ package
 			fileStream.writeBytes(data, 0, data.length);
 			fileStream.close();
 			
-			data.clear();
+			//data.clear();
 			swfDataParser.clear();
 		}
 		
@@ -137,7 +163,6 @@ package
 				rectangles.push(packerRect);
 			}
 			
-			maxRectPacker = new MaxRectPacker();
 			maxRectPacker.clearData();
 			maxRectPacker.packRectangles(rectangles, 0, 2);		
 			
@@ -152,7 +177,6 @@ package
 		
 		private function openAndLoadContent():void 
 		{
-			
 			var fileStream:FileStream = new FileStream();
 			fileStream.open(file, FileMode.READ);
 			

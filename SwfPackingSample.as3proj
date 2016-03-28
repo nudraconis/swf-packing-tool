@@ -63,7 +63,8 @@
   <!-- SWC Libraries -->
   <libraryPaths>
     <element path="bin\Genome2D_last.swc" />
-    <element path="bin\testShapeCut.swc" />
+    <element path="bin\donkey.swc" />
+    <element path="bin\base_stage3d.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>
