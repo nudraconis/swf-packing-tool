@@ -1,0 +1,529 @@
+<?xml version="1.0"?>
+<!---
+ Конвертирует swf-анимации в пандовский формат
+-->
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx" width="800" height="500">
+
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+
+    <s:Form width="100%">
+        <s:FormItem label="Swf folder:">
+            <s:TextInput id="swfFolderTextInput" width="100%" text="{getInputPath()}"/>
+            <s:HGroup>
+                <s:Button label="Browse folder" click="onBrowseFolderClick(event)"/>
+                <s:Button label="Browse file" click="onBrowseFileClick(event)"/>
+            </s:HGroup>
+        </s:FormItem>
+
+        <s:Button label="Set same output" click="onSetSameOutput(event)">
+        </s:Button>
+
+        <s:FormItem label="Out folder:">
+            <s:TextInput id="outFolderTextInput" width="100%" text="{getOutputPath()}"/>
+            <s:Button label="Browse" click="onBrowseOutput(event)"/>
+        </s:FormItem>
+
+        <s:FormItem label="Recursive:">
+            <s:CheckBox id="recursiveCheckBox" selected="false"/>
+        </s:FormItem>
+
+        <s:FormItem label="Skip existing files:">
+            <s:CheckBox id="skipExistingFilesCheckBox" selected="false"/>
+        </s:FormItem>
+
+        <s:FormItem label="Scale:">
+            <s:TextInput id="scaleTextInput" text="1"/>
+        </s:FormItem>
+
+        <s:FormItem label="OverSize:">
+            <s:TextInput id="overSizeTextInput" text="1.3"/>
+        </s:FormItem>
+
+        <s:FormItem label="Draw glows:">
+            <s:HGroup>
+                <s:CheckBox id="drawGlows" selected="false"/>
+            </s:HGroup>
+        </s:FormItem>
+
+
+        <s:Button id="okButton" label="OK" click="onClick(event)"/>
+    </s:Form>
+
+    <mx:Box paddingLeft="10">
+        <mx:ProgressBar id="progressBar"
+                        mode="manual"
+                        includeInLayout="false"
+                        visible="false"/>
+    </mx:Box>
+
+    <fx:Script><![CDATA[
+        import by.blooddy.crypto.image.PNGEncoder;
+		import flash.display.BitmapData;
+		import flash.display.DisplayObject;
+		import flash.display.Loader;
+		import flash.display.PNGEncoderOptions;
+		import flash.events.Event;
+		import flash.events.FileListEvent;
+		import flash.events.IOErrorEvent;
+		import flash.events.ProgressEvent;
+		import flash.filesystem.File;
+		import flash.filesystem.FileMode;
+		import flash.filesystem.FileStream;
+		import flash.net.URLRequest;
+		import flash.system.ApplicationDomain;
+		import flash.system.LoaderContext;
+		import flash.utils.ByteArray;
+
+        import panda.core.utils.getDefinitionNames;
+
+        import reader.SwfDescriptor;
+        import reader.LinkageDescriptor;
+
+        import spark.components.Alert;
+
+        import util.MaxRectPacker;
+        import util.PackerRectangle;
+
+        import writer.DisplayRasterizer;
+
+        private var scale:Number = 1;
+        private var overSize:Number = 1.3;
+
+        private var swfFiles:Vector.<File>;
+        private var loadFileIndex:int;
+        private var progress:int;
+        private var recursiveLevel:int;
+		
+		private var loaderContext:LoaderContext;
+		private var contentLoader:Loader;
+		private var urlRequest:URLRequest;
+		
+		private var ignoreListFolder:Object = {
+													fonts:true, generated:true, banner:true, audio:true, ads:true
+												}
+		
+		private var ignoreList:Object = {"base.swf":true,
+					'apploader.swf':true, 'apploader_inline.swf':true, 'editor.swf':true, 'force_reload_marker.swf':true, 'font.swf':true, 'inline_stub.swf':true,
+					'localized_graphics.de_DE.swf':true, 'localized_graphics.en_US.swf':true, 'localized_graphics.id_ID.swf':true, 'localized_graphics.ja_JP.swf':true, 
+					'localized_graphics.pl_PL.swf':true, 'localized_graphics.ru_RU.swf':true, 'localized_graphics.th_TH.swf':true, 'localized_graphics.vi_VN.swf':true,
+					'preloaderDesign.de_DE.swf':true, 'preloaderDesign.en_US.swf':true, 'preloaderDesign.id_ID.swf':true, 'preloaderDesign.ja_JP.swf':true, 'preloaderDesign.pl_PL.swf':true,
+					'preloaderDesign.ru_RU.swf':true, 'preloaderDesign.ru_RU_mao.swf':true, 'preloaderDesign.swf':true, 'preloaderDesign.th_TH.swf':true,
+					'preloaderDesign.vi_VN.swf':true, 'preloaderDesign.zh_CN.swf':true, 'village.swf':true, 'worker.swf':true
+										
+									};
+
+        private function getInputPath():String {
+            var so:SharedObject = SharedObject.getLocal('swf_rasterizer_animation');
+            return so.data['inputPath'] || ''
+        }
+
+        private function getOutputPath():String {
+            var so:SharedObject = SharedObject.getLocal('swf_rasterizer_animation');
+            return so.data['outputPath'] || '' ;
+        }
+
+        /**
+         * @private
+         */
+        private function onBrowseFolderClick(event:MouseEvent):void {
+            try {
+                var folder:File = swfFolderTextInput.text ? new File(swfFolderTextInput.text) : File.applicationDirectory;
+                if (!folder.exists) folder = File.applicationDirectory;
+
+                folder.browseForDirectory("Select folder with swfs");
+                folder.addEventListener(Event.SELECT, function (event:Event):void {
+                    swfFolderTextInput.text = (event.target as File).nativePath;
+                });
+            } catch (error:Error) {
+                trace("Failed:", error.message);
+                Alert.show(error.message + '\n' + error.getStackTrace(), error.name);
+            }
+        }
+
+        private function onBrowseFileClick(event:MouseEvent):void {
+            try {
+                var file:File = swfFolderTextInput.text ? new File(swfFolderTextInput.text) : File.applicationDirectory;
+                if (!file.exists) file = File.applicationDirectory;
+
+                file.browseForOpen("Select swf", [new FileFilter("Swfs", "*.swf")]);
+                file.addEventListener(Event.SELECT, function (event:Event):void {
+                    swfFolderTextInput.text = (event.target as File).nativePath;
+                });
+            } catch (error:Error) {
+                trace("Failed:", error.message);
+                Alert.show(error.message + '\n' + error.getStackTrace(), error.name);
+            }
+        }
+
+        private function onBrowseOutput(event:MouseEvent):void {
+            try {
+                var folder:File = new File(outFolderTextInput.text);
+                if (!folder.exists) folder = File.applicationDirectory;
+
+                folder.browseForDirectory("Select output folder");
+                folder.addEventListener(Event.SELECT, function (event:Event):void {
+                    outFolderTextInput.text = (event.target as File).nativePath;
+                });
+            } catch (error:Error) {
+                trace("Failed:", error.message);
+                Alert.show(error.message + '\n' + error.getStackTrace(), error.name);
+            }
+        }
+
+        private function onSetSameOutput(event:MouseEvent):void {
+            outFolderTextInput.text = swfFolderTextInput.text;
+        }
+
+        private function onClick(event:MouseEvent):void {
+            scale = parseFloat(scaleTextInput.text);
+            overSize = parseFloat(overSizeTextInput.text);
+
+            var swfFolder:File = new File(swfFolderTextInput.text);
+
+			contentLoader = new Loader();
+			
+			contentLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, onComplete);
+			
+			urlRequest = new URLRequest("");
+			
+			loaderContext = new LoaderContext(false);
+			loaderContext.allowCodeImport = true;
+			
+			
+            swfFiles = new <File>[];
+            scanFolder(swfFolder, swfFiles, swfFolder.nativePath, outFolderTextInput.text);  
+        }
+		
+		private function onProgress(e:ProgressEvent):void 
+		{
+			if (e.bytesLoaded == e.bytesTotal)
+				onComplete(null);
+		}
+		
+		private function onScanComplete():void
+		{
+			trace("swf count: " + swfFiles.length);
+
+            loadFileIndex = 0;
+            progressBar.includeInLayout = progressBar.visible = true;
+            okButton.includeInLayout = okButton.visible = false;
+
+            loadNext();
+
+            var so:SharedObject = SharedObject.getLocal('swf_rasterizer_animation');
+            so.data['inputPath'] = swfFolderTextInput.text;
+            so.data['outputPath'] = outFolderTextInput.text;
+            so.flush();
+		}
+
+		private var isDirectoryScanInProcess:Boolean = false;
+		private var directoriesToScan:Vector.<DirectoryData> = new Vector.<DirectoryData>;
+        private function scanFolder(folder:File, swfFiles:Vector.<File>, baseInputPath:String, baseOutputPath:String = null, parent:File = null):void 
+		{
+			var extension:String = folder.extension;
+			
+            if (extension != null) 
+			{
+                scanFile(folder, extension, swfFiles, baseInputPath, baseOutputPath, parent);
+            } 
+			else 
+			{
+				if (ignoreListFolder[folder.name] != null)
+					return;
+					
+				if (isDirectoryScanInProcess)
+				{
+					directoriesToScan.push(new DirectoryData(folder, swfFiles, baseInputPath, baseOutputPath, parent));
+				}
+				else
+				{
+					queueFolderListing(folder, swfFiles, baseInputPath, baseOutputPath, parent);
+				}
+            }
+        }
+		
+		private function queueFolderListing(folder:File, swfFiles:Vector.<File>, baseInputPath:String, baseOutputPath:String = null, parent:File = null):void 
+		{
+			folder.addEventListener(FileListEvent.DIRECTORY_LISTING, Delegate.create(onDirectoriesGet, swfFiles, baseInputPath, baseOutputPath, folder));
+			folder.getDirectoryListingAsync();
+			isDirectoryScanInProcess = true;
+		}
+		
+		private function onDirectoriesGet(e:FileListEvent, swfFiles:Vector.<File>, baseInputPath:String, baseOutputPath:String = null, parent:File = null):void 
+		{
+			var folder:File = e.target as File;
+			var directoriesList:Array = e.files;
+			
+			for each(var file:File in directoriesList)
+			{
+				var extension:String = file.extension;
+				
+				if (extension != null)
+				{
+					scanFile(file, extension, swfFiles, baseInputPath, baseOutputPath, folder);
+				}
+				else
+				{
+					scanFolder(file, swfFiles, baseInputPath, baseOutputPath, folder);
+				}
+			}
+			
+			if (directoriesToScan.length)
+			{
+				isDirectoryScanInProcess = false;
+				var directoryData:DirectoryData = directoriesToScan.shift();
+				queueFolderListing(directoryData.folder, directoryData.swfFiles, directoryData.baseInputPath, directoryData.baseOutputPath, directoryData.parent);
+			}
+			else
+				onScanComplete();
+		}
+
+        private function scanFile(file:File, extension:String, swfFiles:Vector.<File>, baseInputPath:String, baseOutputPath:String = null, folder:File = null):void 
+		{
+			
+            if (extension == "swf") 
+			{
+				if (ignoreList[file.name] != null)
+				{
+					trace('ignore swf', file.name);
+					return;
+				}
+					
+				var targetDirectory:File;
+				
+				if(baseInputPath == baseOutputPath && folder != null)
+				{
+					targetDirectory = folder;
+				}
+				else
+				{
+					var targetPath:String = file.parent.nativePath.replace(baseInputPath, baseOutputPath);
+					targetDirectory = file.resolvePath(targetPath);
+					
+					if (!targetDirectory.exists) 
+						targetDirectory.createDirectory();
+				}
+				
+                swfFiles.push(file);
+            }
+        }
+
+        private function loadNext():void {
+            var file:File = swfFiles[loadFileIndex];
+			trace('load', file.name);
+
+			var targetFile:File 
+			if (skipExistingFilesCheckBox.selected)
+			{
+				var targetPath:String = file.parent.nativePath.replace(swfFolderTextInput.text, outFolderTextInput.text);
+				var targetFileName:String = targetPath + "/" + file.name.substr(0, file.name.length - 4) + ".animation";
+				targetFile = new File(targetFileName);
+			}
+
+            if (skipExistingFilesCheckBox.selected && targetFile.exists) {
+                trace('================= Skip existing file ' + targetFileName + ' ====================');
+                finishFile();
+            } 
+			else 
+			{
+			   urlRequest.url = file.nativePath;
+			   loaderContext.applicationDomain = new ApplicationDomain();
+			   contentLoader.load(urlRequest, loaderContext);
+            }
+        }
+
+        private function onComplete(event:Event):void {
+			
+
+            var file:File = swfFiles[loadFileIndex];
+            var fileName:String = file.name;
+            fileName = fileName.substring(0, fileName.length - 4);
+
+			var content:DisplayObject = contentLoader.content;
+			
+			if (!content)
+			{
+				finishFile();
+				trace('skip no content');
+				return;
+			}
+			else
+				trace('file load complete');
+			
+            var targetPath:String = file.parent.nativePath.replace(swfFolderTextInput.text, outFolderTextInput.text);
+            processSwf(fileName, targetPath);
+
+            //loader.unloadAndStop();
+            finishFile();
+        }
+
+        private function finishFile():void {
+            loadFileIndex++;
+            if (loadFileIndex == swfFiles.length) {
+                progressBar.includeInLayout = progressBar.visible = false;
+                okButton.includeInLayout = okButton.visible = true;
+            } else {
+                progressBar.setProgress(loadFileIndex, swfFiles.length);
+                loadNext();
+            }
+        }
+
+        private function processSwf(fileName:String, targetPath:String):void {
+            trace('============= ' + fileName + '.swf' + ' =============');
+
+            var loaderDomain:ApplicationDomain = contentLoader.contentLoaderInfo.applicationDomain;
+            var names:Array = getDefinitionNames(contentLoader.contentLoaderInfo, false, true);
+            var rasterizer:DisplayRasterizer = new DisplayRasterizer();
+            var swf:SwfDescriptor = new SwfDescriptor();
+
+            for each(var className:String in names) {
+                if (swf.getLinkageByName(className)) continue;
+                if (className.indexOf('_avatar') > -1) continue;
+
+                try {
+                    var clazz:Class = Class(loaderDomain.getDefinition(className));
+                    var c:* = new clazz();
+                    if (!(c is MovieClip)) continue;
+
+                    var movieClip:MovieClip = c;
+                    movieClip.gotoAndStop(0);
+
+                    var linkages:Vector.<LinkageDescriptor> = rasterizer.rasterize(movieClip, className, scale, overSize, drawGlows.selected);
+                    for each (var link:LinkageDescriptor in linkages) {
+                        swf.addLinkage(link);
+                    }
+
+                    trace('processed ' + className);
+                } catch (e:Error) {
+                    trace('==============ERROR==============');
+                    trace(e.message + '\n' + e.getStackTrace());
+                    trace('=================================');
+
+                    Alert.show(e.message + '\n' + e.getStackTrace(), e.name);
+                }
+            }
+
+            var packer:MaxRectPacker = saveAtlas(rasterizer, targetPath + "\\" + fileName);
+            var rectangles:Vector.<PackerRectangle> = packer.rectangles;
+
+            for each (var rect:PackerRectangle in rectangles) {
+                swf.atlas.add(rect.id, rect.x, rect.y, rect.width, rect.height);
+            }
+
+            savePackedAnimationDescriptors(swf, fileName, targetPath);
+            trace('processed ' + fileName + ' matrix wrote: ' + MatrixPacker.count, rasterizer.mtxCount);
+        }
+
+		private static var PNG_ENCODER_OPTIONS:PNGEncoderOptions = new PNGEncoderOptions(true);
+		private static var BYTE_ARRAY_HELPER:ByteArray = new ByteArray();
+
+		
+        private static function saveAtlas(rasterizer:DisplayRasterizer, atlasFileName:String):MaxRectPacker {
+            var rectangles:Vector.<PackerRectangle> = new Vector.<PackerRectangle>();
+
+            for (var partName:String in rasterizer.nameToBmdHash) {
+                var bitmapData:BitmapData = rasterizer.nameToBmdHash[partName] as BitmapData;
+                if (!bitmapData) continue;
+
+                var rect:PackerRectangle = PackerRectangle.get(0, 0, bitmapData.width, bitmapData.height, partName, bitmapData);
+                rectangles.push(rect);
+            }
+
+            var packer:MaxRectPacker = new MaxRectPacker();
+            packer.packRectangles(rectangles, 2);
+
+            var atlas:BitmapData = new BitmapData(packer.width, packer.height, true, 0x00000000);
+            packer.draw(atlas);
+
+			atlas.encode(atlas.rect, PNG_ENCODER_OPTIONS, BYTE_ARRAY_HELPER);
+			
+            
+            var fileStream:FileStream = new FileStream();
+            fileStream.open(new File(atlasFileName + ".png"), FileMode.WRITE);
+            fileStream.writeBytes(BYTE_ARRAY_HELPER);
+            fileStream.close();
+			
+			
+
+            trace('atlas: ' + atlasFileName + '.png ' + (BYTE_ARRAY_HELPER.length / 1024).toFixed(2) + ' kb');
+			
+			BYTE_ARRAY_HELPER.length = 0;
+			BYTE_ARRAY_HELPER.position = 0;
+			
+			
+            return packer;
+            /*
+             var area:int = 0;
+
+             var imagesInfo:Array = [];
+
+             var maxW:int = 0;
+             var maxH:int = 0;
+             for (var partName:String in rasterizer.partsHash) {
+             var bitmapData:BitmapData = rasterizer.partsHash[partName] as BitmapData;
+             if (!bitmapData) continue;
+
+             area += bitmapData.width * bitmapData.height;
+             if (maxW < bitmapData.width) maxW = bitmapData.width;
+             if (maxH < bitmapData.height) maxH = bitmapData.height;
+
+             imagesInfo.push(new ImageInfo(bitmapData, partName));
+             }
+
+             imagesInfo.sortOn(['width', 'height'], Array.NUMERIC | Array.DESCENDING);
+
+             var atlasSize:int = 1;
+             while (atlasSize * atlasSize <= area || atlasSize < maxW || atlasSize < maxH) atlasSize *= 2;
+
+             var atlas:Atlas = new Atlas(atlasSize);
+             var texturesMap:Dictionary = new Dictionary(); // partName => SubTexture
+
+             while (!tryCreateAtlas(atlasSize)) {
+             atlasSize *= 2;
+             atlas = new Atlas(atlasSize);
+             texturesMap = new Dictionary(); // partName => SubTexture
+             }
+
+             atlas.savePng(atlasFileName);
+             return texturesMap;
+
+             function tryCreateAtlas(atlasSize:int):Boolean {
+             for each(var imageInfo:ImageInfo in imagesInfo) {
+             var bitmapData:BitmapData = imageInfo.bitmapData;
+             var subTexture:SubTexture = atlas.addBitmapData(bitmapData, imageInfo.name);
+             if (!subTexture) return false;
+             texturesMap[imageInfo.name] = subTexture;
+             }
+
+             return true;
+             }*/
+        }
+
+        private static function savePackedAnimationDescriptors(swfDescriptor:SwfDescriptor, fileName:String, outPath:String):void {
+            var result:ByteArray = new ByteArray();
+            swfDescriptor.toByteArray(result);
+            result.compress("lzma");
+            fileName = outPath + "/" + fileName + ".animation";
+
+            var fileStream:FileStream = new FileStream();
+            fileStream.open(new File(fileName), FileMode.WRITE);
+            fileStream.writeBytes(result);
+            fileStream.close();
+
+            trace('Animation: ' + fileName + ' after compress:' + (result.length / 1024).toFixed(2) + 'kb');
+
+            setTimeout(function ():void {
+                var t:Number = getTimer();
+                var swf:SwfDescriptor = new SwfDescriptor();
+                result.uncompress('lzma');
+                result.position = 0;
+                swf.fromByteArray(result);
+                trace('\n\n');
+                trace('decompressed: ' + (getTimer() - t) + ' ms.');
+            }, 1000);
+        }
+        ]]></fx:Script>
+</s:Application>

@@ -1,6 +1,7 @@
 package web 
 {
 	import broadcasting.BroadcastingManager;
+	import events.FileSystemScope;
 	import events.SystemMenuScope;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -18,7 +19,11 @@ package web
 		
 		private function initialize():void 
 		{
+			stage.align = "TL";
+			stage.scaleMode = "noScale";
+			
 			BroadcastingManager.instance.registerScope(SystemMenuScope);
+			BroadcastingManager.instance.registerScope(FileSystemScope);
 			
 			new FileManagerController();
 			

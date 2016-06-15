@@ -6,15 +6,15 @@
   <compiler>
     <define append="true">
       <name>CONFIG::debug</name>
-      <value>true</value>
-    </define>
-    <define append="true">
-      <name>CONFIG::release</name>
       <value>false</value>
     </define>
     <define append="true">
+      <name>CONFIG::release</name>
+      <value>true</value>
+    </define>
+    <define append="true">
       <name>CONFIG::timeStamp</name>
-      <value>'08.06.2016'</value>
+      <value>'15.06.2016'</value>
     </define>
     <define append="true">
       <name>CONFIG::air</name>
@@ -28,30 +28,30 @@
       <name>CONFIG::desktop</name>
       <value>true</value>
     </define>
-    <verbose-stacktraces>true</verbose-stacktraces>
+    <optimize>true</optimize>
+    <omit-trace-statements>true</omit-trace-statements>
+    <verbose-stacktraces>false</verbose-stacktraces>
     <source-path append="true">
       <path-element>D:\swf-packer-repo\swf-packing-tool\src</path-element>
       <path-element>D:\panda\village-flash\branches\stage3d\libs\swfdata\src\main\actionscript</path-element>
       <path-element>D:\panda\village-flash\branches\stage3d\libs\swfdrawer\src</path-element>
       <path-element>D:\panda\village-flash\branches\stage3d\libs\fastByteArray\src\main\actionscript</path-element>
       <path-element>D:\panda\village-flash\branches\stage3d\libs\swfparser\src\main\actionscript</path-element>
-      <path-element>D:\dev\as3swf\src</path-element>
-      <path-element>D:\panda\trunk\client\Tools\as\swf_rasterizer_animation\src</path-element>
+      <path-element>D:\panda\village-flash\branches\stage3d\libs\as3swf\src</path-element>
+      <path-element>D:\panda\village-flash\branches\stage3d\libs\graphicscorelib\src</path-element>
       <path-element>D:\swf-packer-repo\utilityUi\src</path-element>
       <path-element>D:\swf-packer-repo\debugUtils\src</path-element>
-      <path-element>D:\panda\village-flash\branches\stage3d\libs\graphicscorelib\src</path-element>
       <path-element>D:\Flash Develop Stable\Library\AS3\classes</path-element>
     </source-path>
     <library-path append="true">
-      <path-element>D:\swf-packer-repo\swf-packing-tool\bin\donkey.swc</path-element>
-      <path-element>D:\swf-packer-repo\swf-packing-tool\bin\base_stage3d.swc</path-element>
-      <path-element>D:\swf-packer-repo\swf-packing-tool\bin\Genome2D.swc</path-element>
+      <path-element>D:\swf-packer-repo\swf-packing-tool\bin\greensock.swc</path-element>
+      <path-element>D:\swf-packer-repo\swf-packing-tool\bin\Genome2D_last.swc</path-element>
     </library-path>
   </compiler>
   <file-specs>
-    <path-element>D:\swf-packer-repo\swf-packing-tool\src\TestImporting.as</path-element>
+    <path-element>D:\swf-packer-repo\swf-packing-tool\src\web\WebAppStartUp.as</path-element>
   </file-specs>
-  <default-background-color>#C0C0C0</default-background-color>
+  <default-background-color>#FFFFFF</default-background-color>
   <default-frame-rate>30</default-frame-rate>
   <default-size>
     <width>1600</width>

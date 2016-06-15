@@ -6,6 +6,7 @@ package view.genome.textures
 	import flash.display.BitmapData;
 	import flash.display3D.Context3DTextureFormat;
 	import flash.geom.Rectangle;
+	import view.genome.Genome2DController;
 	
 	/**
 	 * Мульти текстур атлас, хранит в себе N атласов для акторов с кучей субтекстур
@@ -34,7 +35,7 @@ package view.genome.textures
 		 */
 		public function createAtlas(source:BitmapData):void
 		{
-			currentAtlas = GTextureManager.createTexture(id + atlasesUsed, source, 1, false, Context3DTextureFormat.BGR_PACKED);
+			currentAtlas = GTextureManager.createTexture(id + atlasesUsed, source, 1, false, Genome2DController.TEXTURE_FORMAT);
 			currentAtlas.filteringType = GTextureFilteringType.LINEAR;
 
 			atlases.push(currentAtlas);

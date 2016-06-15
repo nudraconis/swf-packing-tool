@@ -1,16 +1,14 @@
 package 
 {
+	import com.genome2d.Genome2D;
 	import com.genome2d.context.GContextConfig;
 	import com.genome2d.context.stats.GStats;
-	import com.genome2d.Genome2D;
-	import com.genome2d.textures.GTexture;
 	import com.genome2d.textures.GTextureFilteringType;
 	import com.genome2d.textures.GTextureManager;
+	import com.greensock.TweenLite;
 	import debugUi.DefinitionUiContainer;
-	import flash.display.BitmapData;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
-	import flash.display3D.Context3DProfile;
 	import flash.display3D.Context3DRenderMode;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -18,29 +16,50 @@ package
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.system.Capabilities;
 	import flash.ui.Keyboard;
-	import paralax.ParalaxLayer;
-	import paralax.ParallaxLayerController;
-	import swfdata.atlas.GenomeTextureAtlas;
 	import swfdata.ColorData;
 	import swfdata.MovieClipData;
 	import swfdata.SpriteData;
 	import swfdata.SymbolsLibrary;
+	import swfdata.atlas.GenomeTextureAtlas;
 	import swfdrawer.DisplayListDrawer;
 	import ui.TextButton;
 	import view.genome.Context3DProfiles;
-	import view.genome.filters.AdjustColor;
+	import view.genome.VMemStat;
 	
 	public class TestScene extends Sprite 
 	{
+		private var atlas:GenomeTextureAtlas;
+		
+		private var cameraX:Number = 0;
+		private var cameraY:Number = 0;
+		
+		private var bounding:Rectangle = new Rectangle();
+		private var frame:int = 0;
+		private var size:Number = 1;
+		private var ratio:Number = 0.0;
+		
+		private var backgroundBorder:BackgroundBorder;
+		private var color:ColorData = new ColorData();
+		
 		private var debugDrawer:DisplayListDrawer;
+		
 		private var sprite:SpriteData;
 		private var library:SymbolsLibrary
 		
-		private var definitionUiContainer:debugUi.DefinitionUiContainer;
+		
+		private var debug:Boolean = false;
+		private var checkBounds:Boolean = false;
+		private var checkMouseHit:Boolean = false;
 		
 		public static var convas:Graphics;
 		public static var numPoint:int = 0;
+		
+		
+		private var definitionUiContainer:DefinitionUiContainer;
+		
+		private var mousePoint:Point = new Point();
 		
 		public function TestScene() 
 		{
@@ -70,26 +89,45 @@ package
 			stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
 		}
 		
+		private function onMouseWheel(e:MouseEvent):void 
+		{
+			var delta:Number = e.delta / (e.shiftKey? 5:50);
+			
+			var factor:Number = 3 / size;
+			
+			delta /= factor;
+			
+			var _size:Number = size;
+			_size += delta;
+			
+			if (_size < 0.5)
+				_size = 0.5;
+				
+			if (_size > 3)
+				_size = 3;
+				
+			TweenLite.to(this, 0.15, { size:_size } );
+		}
+		
 		private function onMouseMove(e:MouseEvent):void 
 		{
 			var deltaX:Number = (mouseX - mouseClickPosition.x);
 			var deltaY:Number = (mouseY - mouseClickPosition.y);
 			
-			paralaxController.camera.x += deltaX;
-			paralaxController.camera.y += deltaY;
-			
 			mouseClickPosition.setTo(mouseX, mouseY);
 			
-			next_x += deltaX;
-			next_y += deltaY;
+			cameraX += deltaX;
+			cameraY += deltaY;
 		}
 		
 		private function onAddedToStage(e:Event):void 
 		{
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+			stage.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 			
 			definitionUiContainer = new debugUi.DefinitionUiContainer();
+			definitionUiContainer.y = 55;
 			addChild(definitionUiContainer);
 			
 			var showAtlasButton:TextButton = new TextButton("Show atlas");
@@ -104,7 +142,7 @@ package
 			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 			
 		
-			trace('constructing genome');
+			internal_trace('constructing genome');
 			var genome:Genome2D = Genome2D.getInstance();
 			genome.onInitialized.addOnce(onGenome2DInitialized);
 			
@@ -124,26 +162,63 @@ package
 		
 		private function onGenome2DInitialized(arg:* = null):void 
 		{
-			trace('genome init');
+			internal_trace('genome init');
+			
+			internal_trace("Mouse and Mouse wheel to drag camera and zoom");
+			internal_trace("use Q/W to jump on next/prev symbol");
+			internal_trace("space for pause/unpause");
+			internal_trace("D toggle debug drawing");
+			internal_trace("S toggle bounds calculation");
+			internal_trace("A toggle mouse hit calculation");
+			
 			
 			Genome2D.getInstance().getContext().setBackgroundColor(0xC0C0C0, 1);
 			Genome2D.getInstance().onPreRender.add(onFrame);
-			Genome2D.getInstance().g2d_context.g2d_nativeContext.enableErrorChecking = true;
+			Genome2D.getInstance().g2d_context.g2d_nativeContext.enableErrorChecking = false;
 			
-			GStats.visible = false;
+			GStats.visible = true;
 			GStats.x = stage.stageWidth - 200;
+			
+			var profile:String = "baseline";
+			
+			var statIdx:int = 0;
+			
+			var costumeStats:Array = new Array();
+				
+			if (Genome2D.g2d_instance.g2d_context.g2d_nativeContext.hasOwnProperty("totalGPUMemory"))
+			{
+				costumeStats[statIdx] = new VMemStat();
+				statIdx++;
+			}
+			 
+			if (Genome2D.g2d_instance.g2d_context.g2d_nativeContext.hasOwnProperty("profile"))
+				profile = Genome2D.g2d_instance.g2d_context.g2d_nativeContext["profile"];
+				
+			costumeStats[statIdx] = profile;
+			
+			GStats.customStats = costumeStats;
 			
 			dispatchEvent(new Event(Event.COMPLETE));
 		}
 		
 		public function showAtlas(e:Event = null):void
 		{
-			WindowUtil.openWindowToReview(atlas.atlasData);
+			if (Capabilities.playerType == "Desktop")
+			{
+				if(atlas != null)
+					WindowUtil.openWindowToReview(atlas.atlasData);
+			}
+			else
+				internal_error("atlas review only for desktop version");
 		}
 		
 		public function show(library:SymbolsLibrary, atlas:GenomeTextureAtlas):void
 		{
+			cameraX = 0;
+			cameraY = 0;
+			
 			color.a = 1;
+			
 			this.atlas = atlas;
 			this.library = library;
 			
@@ -157,58 +232,50 @@ package
 				
 			if(spriteAsTimeline && spriteAsTimeline.getChildByName('animation'))
 				(spriteAsTimeline.getChildByName('animation') as MovieClipData).play();
-			else if (spriteAsTimeline)
-				spriteAsTimeline.gotoAndPlayAll(0);
-				
-			sprite.gotoAndPlayAll(0);
-			
-			paralaxController = new ParallaxLayerController(stage, new ParalaxLayer(sprite));
-			paralaxController.init();
-			
 		}
 		
 		private var libLookupIndex:int = 0;
 		private function onKeyDown(e:KeyboardEvent):void 
 		{
-			
 			if (e.keyCode == Keyboard.T)
 			{
-				
 				color.a -= 0.1;
 				size-= 0.2;
-				//backgroundBorder.setSize(size);
-				AdjustColor.brightness += 0.1;
-				
 			}
 			else if (e.keyCode == Keyboard.R)
 			{
 				color.a += 0.1;
 				size+= 0.2;
-				//backgroundBorder.setSize(size);
-				AdjustColor.brightness -= 0.1;
-				
 			}
 			if (e.keyCode == Keyboard.F)
 			{
 				ratio-=0.1;
-				AdjustColor.contrast += 0.1;
 				
 			}
 			else if (e.keyCode == Keyboard.G)
 			{
 				ratio+=0.1
-				AdjustColor.contrast -= 0.1;
 				
 			}
 			if (e.keyCode == Keyboard.V)
 			{
-				AdjustColor.saturation += 0.1;
 				
 			}
 			else if (e.keyCode == Keyboard.B)
 			{
-				AdjustColor.saturation -= 0.1;
 				
+			}
+			else if (e.keyCode == Keyboard.A)
+			{
+				checkMouseHit = !checkMouseHit;
+			}
+			else if (e.keyCode == Keyboard.S)
+			{
+				checkBounds = !checkBounds;
+			}
+			else if (e.keyCode == Keyboard.D)
+			{
+				debug = !debug;
 			}
 			
 			if (color.a > 1.5)
@@ -272,98 +339,12 @@ package
 			//trace(sprite.libraryLinkage, sprite.name);
 		}
 		
-		
-		private var atlas:GenomeTextureAtlas;
-		private var frame:int = 0;
-		private var bounding:Rectangle = new Rectangle();
-		private var mousePoint:Point = new Point();
-		private var size:Number = 3;
-		private var ratio:Number = 0.0;
-		
-		private var backgroundBorder:BackgroundBorder;
-		private var color:ColorData = new ColorData();
-		
-		public function drawRect():void
-		{
-			
-			var text:GTexture = GTextureManager.getTexture("neibor_border");
-			if (text == null)
-			{
-				var bmp:BitmapData = new BitmapData(64, 64, true, 0x0);
-				var m:Matrix = new Matrix();
-				//m.scale(64 / 48, 64 / 48);
-				bmp.draw(new neibor_border, m);
-				text = GTextureManager.createTexture("neibor_border", bmp, 32/64, true);
-				text.filteringType = GTextureFilteringType.LINEAR;
-				
-				backgroundBorder = new BackgroundBorder(text, 5);
-			}
-			
-			backgroundBorder.draw(400, 300);
-			backgroundBorder.setSize(9);
-			
-			Genome2D.g2d_instance.g2d_context.drawMatrix(text, 1, 0, 0, 1, 400, 300);
-		}
-		
-		public function render():void 
-		{
-			
-			
-			/*var ax:Number = cam_x;
-			var ay:Number = cam_y;
-
-			var debugBorder:int = -25;
-			
-			var aly:int = cam_y + 40;
-
-			var len:int = 5;
-
-			for (var i:int = 0; i < len; i++) 
-			{
-				if (_positions[i] == null)
-					continue;
-					
-				//var textures:Vector.<GTexture> = this._planes[i];
-
-				var position:Point = this._positions[i];
-				var nextX:int = position.x;
-
-				//var tLen:int = textures.length;
-				for (var j:int = 0; j < 5; j++) 
-				{
-					//var t:GTexture = textures[j];
-					
-					var h:Number = t.height;
-					var y:Number = position.y + ay;
-					var b:Number = y + h;
-					
-					var y:Number = position.y;
-					
-					next_x = nextX;
-					next_y = y + aly;
-					
-					nextX += t.width;
-				}
-			}*/
-		}
-		
-		private var _positions:Vector.<Point> = new Vector.<Point>(5, true);
-		private var cam_x:Number = 0;
-		private var cam_y:Number = 0;
-		private var next_x:Number = 0;
-		private var next_y:Number = 0;
-		private var paralaxController:ParallaxLayerController;
-		
 		private function onFrame(e:Event = null):void 
 		{
 			if (!sprite || ! debugDrawer)
 				return;
 				
 			graphics.clear();
-			
-			
-			if ((sprite.getChildByName("mill") as MovieClipData) )
-				(sprite.getChildByName("mill") as MovieClipData).play();
 			
 			numPoint = 0;
 			
@@ -373,65 +354,46 @@ package
 			if(sprite is IUpdatable)
 				(sprite as IUpdatable).update();
 				
-			//paralaxController.render();
-				
 			bounding.setTo(0, 0, 0, 0);
 			debugDrawer.debugConvas = this.graphics;
 			
-			debugDrawer.checkBounds = true;
-			debugDrawer.debugDraw = false;
-			debugDrawer.checkMouseHit = false;
+			debugDrawer.checkBounds = checkBounds;
+			debugDrawer.debugDraw = debug;
+			debugDrawer.checkMouseHit = checkMouseHit;
 			
 			debugDrawer.smooth = true;
 			
 			var direction:Number = 1;
 			
-			sprite.transform.a = 1 * direction;
-			sprite.transform.d = 1;
-			
-			
-			render();
+			sprite.transform.a = size * direction;
+			sprite.transform.d = size;
 			
 			//trace("======draw=======");
-			debugDrawer.drawDisplayObject(sprite, new Matrix(1, 0, 0, 1, next_x, next_y), bounding, color);
+			debugDrawer.drawDisplayObject(sprite, new Matrix(1, 0, 0, 1, cameraX, cameraY), bounding, color);
 			//trace("=====end draw=====");
 			
-			//if(next_x == 0)
-			//	next_x = (stage.stageWidth - (bounding.width)) / 2 + Math.abs(bounding.x);
+			if(cameraX == 0)
+				cameraX = (stage.stageWidth - (bounding.width)) / 2 + Math.abs(bounding.x);
 				
-			//if(next_y == 0)
-			//	next_y = (stage.stageHeight - (bounding.height)) / 2 + Math.abs(bounding.y);
+			if(cameraY == 0)
+				cameraY = (stage.stageHeight - (bounding.height)) / 2 + Math.abs(bounding.y);
 			
-			//debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake11110001"), new Matrix(1, 0, 0, 1, 400, 300 + 37.45), true, false, false, -1, bounding);
+			if (checkBounds)
+			{
+				graphics.lineStyle(1, 0);
+				graphics.drawRect(bounding.x, bounding.y, bounding.width, bounding.height);
+			}
 			
-			//debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake1110000"), new Matrix(1, 0, 0, 1, 400 + -37.45, 300 + 37.45 / 2), true, false, false, -1, bounding);
-			
-			//debugDrawer.drawDisplayObject(library.getDisplayObjectByLinkage("lake111"), new Matrix(1, 0, 0, 1, 400 + 37.45, 300 + 37.45 / 2), true, false, false, -1, bounding);
-			
-			//drawRect();
-			
-			//Genome2D.g2d_instance.g2d_context.drawPoly(text, [ -50, -50, 50, -50, 50, 50, 50, 50, -50, 50, -50, -50 ], [0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0], 400, 350);
-			
-			//graphics.lineStyle(1, 0);
-			//graphics.drawRect(bounding.x, bounding.y, bounding.width, bounding.height);
-			
-			/*graphics.lineStyle(1, 0x00FF00, 0.5);
+			graphics.lineStyle(1, 0x00FF00, 0.5);
 			graphics.moveTo(stage.stageWidth / 2, 0);
 			graphics.lineTo(stage.stageWidth / 2, stage.stageHeight);
 			
 			graphics.lineStyle(1, 0xFF0000, 0.5);
 			graphics.moveTo(0, stage.stageHeight / 2);
 			graphics.lineTo(stage.stageWidth, stage.stageHeight / 2);
-				*/
 			
-			//definitionUiContainer.buildControls(sprite);
-			//definitionUiContainer.update();
-			
-			//trace(bounding);
-			
-			
+			definitionUiContainer.buildControls(sprite);
+			definitionUiContainer.update();
 		}
-		
 	}
-
 }

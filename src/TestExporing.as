@@ -169,7 +169,6 @@ package
 			
 			maxRectPacker.clearData();
 			maxRectPacker.packRectangles(rectangles, 0, 2);		
-			
 		}
 		
 		private function parseSwfData():void 
