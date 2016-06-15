@@ -6,8 +6,8 @@
     <movie input="" />
     <movie path="bin\SwfPackingSample.swf" />
     <movie fps="30" />
-    <movie width="800" />
-    <movie height="600" />
+    <movie width="1600" />
+    <movie height="800" />
     <movie version="20" />
     <movie minorVersion="0" />
     <movie platform="AIR" />
@@ -17,15 +17,15 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="src" />
-    <class path="D:\dev\graphicscorelib\src" />
-    <class path="D:\dev\libs\swfdata\src" />
-    <class path="D:\dev\libs\swfpacker\src" />
-    <class path="D:\dev\libs\swfdrawer\src" />
-    <class path="D:\dev\libs\swfexporter\src" />
+    <class path="D:\panda\village-flash\branches\stage3d\libs\swfdata\src\main\actionscript" />
+    <class path="D:\panda\village-flash\branches\stage3d\libs\swfdrawer\src" />
+    <class path="D:\panda\village-flash\branches\stage3d\libs\fastByteArray\src\main\actionscript" />
+    <class path="D:\panda\village-flash\branches\stage3d\libs\swfparser\src\main\actionscript" />
     <class path="D:\dev\as3swf\src" />
     <class path="D:\panda\trunk\client\Tools\as\swf_rasterizer_animation\src" />
     <class path="D:\swf-packer-repo\utilityUi\src" />
     <class path="D:\swf-packer-repo\debugUtils\src" />
+    <class path="D:\panda\village-flash\branches\stage3d\libs\graphicscorelib\src" />
   </classpaths>
   <!-- Build options -->
   <build>
@@ -34,7 +34,7 @@
     <option allowSourcePathOverlap="False" />
     <option benchmark="False" />
     <option es="False" />
-    <option inline="True" />
+    <option inline="False" />
     <option locale="" />
     <option loadConfig="" />
     <option optimize="True" />
@@ -62,9 +62,9 @@
   </includeLibraries>
   <!-- SWC Libraries -->
   <libraryPaths>
-    <element path="bin\Genome2D_last.swc" />
     <element path="bin\donkey.swc" />
     <element path="bin\base_stage3d.swc" />
+    <element path="bin\Genome2D.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

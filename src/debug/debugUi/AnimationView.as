@@ -1,9 +1,11 @@
 package debug.debugUi 
 {
+	import debugUi.AnimationView;
 	import flash.events.MouseEvent;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
+	import swfdata.DisplayObjectData;
 	import swfdata.MovieClipData;
 	import ui.UIComponent;
 	
@@ -14,9 +16,9 @@ package debug.debugUi
 		private var animationName:TextField;
 		private var animationTimeline:TextField;
 		
-		public var animationData:MovieClipData;
+		public var animationData:DisplayObjectData;
 		
-		public function AnimationView(animationData:MovieClipData) 
+		public function AnimationView(animationData:DisplayObjectData) 
 		{
 			this.animationData = animationData;
 			width = 250;
@@ -44,7 +46,8 @@ package debug.debugUi
 			if (e.shiftKey)
 				delta *= 5;
 				
-			animationData.advanceFrame(delta);
+			if(animationData is MovieClipData)
+				(animationData as MovieClipData).advanceFrame(delta);
 		}
 		
 		private function onMiddleClick(e:MouseEvent):void 
@@ -59,11 +62,13 @@ package debug.debugUi
 		
 		private function onMouseDown(e:MouseEvent):void 
 		{
-			
-			if (animationData.timeline.isPlaying)
-				this.animationData.stop();
-			else
-				this.animationData.play();
+			if (animationData is MovieClipData)
+			{
+				if ((animationData as MovieClipData).timeline.isPlaying)
+					(animationData as MovieClipData).stop();
+				else
+					(animationData as MovieClipData).play();
+			}
 		}
 		
 		override protected function createChildren():void 
@@ -86,6 +91,10 @@ package debug.debugUi
 			animationTimeline.defaultTextFormat = textFormat;
 			animationTimeline.autoSize = TextFieldAutoSize.LEFT;
 			animationTimeline.text = "999/999"
+			
+			
+			
+			
 			animationTimeline.selectable = animationTimeline.mouseEnabled = false;
 		}
 		
@@ -116,11 +125,14 @@ package debug.debugUi
 					if (animationData.prototype && animationData.prototype.libraryLinkage)
 						animationName.text = animationData.prototype.libraryLinkage;
 					else
-						animationName.text = "NULL";
+						animationName.text = getClassName(animationData) + " " + animationData.characterId + " " + animationData.depth;
 				}
 			}
 				
-			animationTimeline.text = animationData.currentFrame + "/" + animationData.framesCount;
+			if(animationData is MovieClipData)
+				animationTimeline.text = (animationData as MovieClipData).currentFrame + "/" + (animationData as MovieClipData).framesCount;
+			else
+				animationTimeline.text = "";
 			
 			graphics.clear();
 			graphics.lineStyle(0.8, 0xCCCCFF);
@@ -129,7 +141,9 @@ package debug.debugUi
 			graphics.drawRect(0, 0, width, height);
 			
 			graphics.beginFill(0xCCCCFF, 0.6);
-			graphics.drawRect(0, 0, width * (animationData.currentFrame / animationData.framesCount), height);
+			
+			if(animationData is MovieClipData)
+				graphics.drawRect(0, 0, width *  ((animationData as MovieClipData).currentFrame / (animationData as MovieClipData).framesCount), height);
 			
 			layoutChildren();
 		}

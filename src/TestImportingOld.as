@@ -1,8 +1,6 @@
 package 
 {
-	import fastByteArray.FastByteArray;
 	import flash.display.Sprite;
-	import flash.display3D.Context3DTextureFormat;
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.filesystem.File;
@@ -11,35 +9,29 @@ package
 	import flash.net.FileFilter;
 	import flash.sampler.getSize;
 	import flash.utils.ByteArray;
-	import flash.utils.Endian;
 	import flash.utils.Timer;
 	import swfdata.atlas.GenomeTextureAtlas;
 	import swfdata.dataTags.SwfPackerTag;
-	import swfDataExporter.SwfExporter;
-	import view.genome.Context3DProfiles;
-
+	import swfDataExporter.SwfExporterOld;
 	import swfparser.SwfParserLight;
 	
 	/**
 	 * ...
 	 * @author ...
 	 */
-	public class TestImporting extends Sprite 
+	public class TestImportingOld extends Sprite 
 	{
-		private var fileName:String = "terrain_trash";
-		private var fileContent:FastByteArray;
-		private var swfExporter:SwfExporter = new SwfExporter();
+		private var fileName:String = "greenhouse_m";
+		private var fileContent:ByteArray;
+		private var swfExporter:SwfExporterOld = new SwfExporterOld();
 		private var testScene:TestScene;
 		private var file:File;
-		private var swfParserLight:SwfParserLight;
-		private var genomeTextureAtlas:GenomeTextureAtlas;
 		
-		public function TestImporting() 
+		public function TestImportingOld() 
 		{
 			super();
 			
-			
-			
+
 			var t:Timer = new Timer(1000, 1);
 			t.addEventListener(TimerEvent.TIMER_COMPLETE, onStartParse);
 			t.start();
@@ -66,11 +58,8 @@ package
 			var fileStream:FileStream = new FileStream();
 			fileStream.open(file, FileMode.READ);
 			
-			var bytes:ByteArray = new ByteArray();
-			bytes.endian = Endian.LITTLE_ENDIAN;
-			
-			fileContent = new FastByteArray(bytes);
-			fileStream.readBytes(bytes, 0, fileStream.bytesAvailable);
+			fileContent = new ByteArray();
+			fileStream.readBytes(fileContent, 0, fileStream.bytesAvailable);
 			fileStream.close();
 			
 			unpack();
@@ -87,16 +76,14 @@ package
 		
 		private function onGenomeReady(e:Event):void 
 		{
-			swfParserLight = new SwfParserLight();
+			var swfParserLight:SwfParserLight = new SwfParserLight(true);
 			var swfTags:Vector.<SwfPackerTag> = new Vector.<SwfPackerTag>;
 			
-			
-			genomeTextureAtlas = swfExporter.importSwfGenome("noname", fileContent, swfParserLight.context.shapeLibrary, swfTags, Context3DTextureFormat.BGRA);
+			var genomeTextureAtlas:GenomeTextureAtlas = swfExporter.importSwfGenome("noname", fileContent, swfParserLight.context.shapeLibrary, swfTags);
 			
 			swfParserLight.context.library.addShapes(swfParserLight.context.shapeLibrary);
-
 			swfParserLight.processDisplayObject(swfTags);
-
+			
 			testScene.show(swfParserLight.context.library, genomeTextureAtlas);
 		}
 		
@@ -106,13 +93,9 @@ package
 			var fileStream:FileStream = new FileStream();
 			fileStream.open(file, FileMode.READ);
 			
-			var bytes:ByteArray = new ByteArray();
-			bytes.endian = Endian.LITTLE_ENDIAN;
-			
-			fileStream.readBytes(bytes, 0, fileStream.bytesAvailable);
+			fileContent = new ByteArray();
+			fileStream.readBytes(fileContent, 0, fileStream.bytesAvailable);
 			fileStream.close();
-			
-			fileContent = new FastByteArray(bytes);
 			
 			unpack();
 		}

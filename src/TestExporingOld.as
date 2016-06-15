@@ -1,9 +1,7 @@
 package 
 {
-	import fastByteArray.FastByteArray;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
-	import flash.display3D.Context3DTextureFormat;
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.filesystem.File;
@@ -20,28 +18,28 @@ package
 	import swfDataExporter.SwfExporter;
 	import swfparser.SwfDataParser;
 	import swfparser.SwfParserLight;
-	import util.MaxRectPacker;
-	import util.PackerRectangle;
+	import utils.MaxRectPacker;
+	import utils.PackerRectangle;
 	
-	public class TestExporing extends Sprite 
+	public class TestExporingOld extends Sprite 
 	{
-		private var fileName:String = "testDeep";
+		private var fileName:String = "greenhouse_m";
 		
 		private var fileContent:ByteArray;
 		private var swfDataParser:SwfDataParser;
 		private var packedAtlas:BitmapTextureAtlas;
-		private var maxRectPacker:MaxRectPacker = new MaxRectPacker(2048, 2048);
-		private var data:FastByteArray = new FastByteArray(null, 1024*100000);
+		private var maxRectPacker:MaxRectPacker = new MaxRectPacker();
+		private var data:ByteArray = new ByteArray();
 		private var swfExporter:SwfExporter;
 		private var file:File;
 		
 		private var testScene:TestScene;
 		
-		public function TestExporing() 
+		public function TestExporingOld() 
 		{
 			super();
 			
-			file = File.documentsDirectory.resolvePath(fileName + ".swf");
+			file= File.documentsDirectory.resolvePath(fileName + ".swf");
 			
 			var t:Timer = new Timer(1000, 1);
 			t.addEventListener(TimerEvent.TIMER_COMPLETE, onStartParse);
@@ -96,7 +94,7 @@ package
 			
 			data.position = 0;
 			
-			var genomeTextureAtlas:GenomeTextureAtlas = swfExporter.importSwfGenome("noname", data, swfParserLight.context.shapeLibrary, swfTags, Context3DTextureFormat.BGRA);
+			var genomeTextureAtlas:GenomeTextureAtlas = swfExporter.importSwfGenome("noname", data, swfParserLight.context.shapeLibrary, swfTags);
 			
 			swfParserLight.context.library.addShapes(swfParserLight.context.shapeLibrary);
 			swfParserLight.processDisplayObject(swfTags);
@@ -109,16 +107,14 @@ package
 		{
 			swfExporter = new SwfExporter();
 			
-			trace("### PACKED ATLAS ###");
-			trace(packedAtlas.atlasData.width, packedAtlas.atlasData.height);
 			swfExporter.exportSwf(packedAtlas, swfDataParser.context.shapeLibrary, swfDataParser.packerTags, data);
 			
-			var file:File = File.documentsDirectory.resolvePath(fileName + ".animation");
+			var file:File = File.documentsDirectory.resolvePath(fileName + ".old.animation");
 			var fileStream:FileStream = new FileStream();
 			fileStream.open(file, FileMode.WRITE);
 			
 			fileContent = new ByteArray();
-			fileStream.writeBytes(data.byteArray, 0, data.length);
+			fileStream.writeBytes(data, 0, data.length);
 			fileStream.close();
 			
 			//data.clear();
@@ -175,7 +171,7 @@ package
 		private function parseSwfData():void 
 		{
 			swfDataParser = new SwfDataParser();
-			swfDataParser.parseSwf(fileContent, true);
+			swfDataParser.parseSwf(fileContent);
 			fileContent.clear();
 		}
 		

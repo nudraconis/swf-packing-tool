@@ -2,7 +2,7 @@ package view.genome.filters
 {
 	import com.genome2d.textures.GTexture;
 	import com.genome2d.context.filters.GFilter;
-	import com.genome2d.context.IContext;
+	import com.genome2d.context.IGContext;
 	
 	/**
 	 * ...
@@ -60,7 +60,7 @@ package view.genome.filters
 		}
 		
 	
-		override public function bind(p_context:IContext, p_defaultTexture:GTexture):void 
+		override public function bind(p_context:IGContext, p_defaultTexture:GTexture):void 
 		{
 			//Dont forget that genome reserver fc0 so 0-4 registers is fc1
 			fragmentConstants[0] = brightness;

@@ -8,8 +8,8 @@ package  {
 	import com.genome2d.textures.GTextureManager;
 	import flash.display.BitmapData;
 	import flash.system.ApplicationDomain;
-	import util.MaxRectPacker;
-	import util.PackerRectangle;
+	import utils.MaxRectPacker;
+	import utils.PackerRectangle;
 
 	/**
 	 * @author                    Obi

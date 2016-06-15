@@ -19,7 +19,7 @@ package tests
 	import flash.system.ApplicationDomain;
 	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
-	import util.MaxRectPacker;
+	import utils.MaxRectPacker;
 	/**
 	 * ...
 	 * @author ...
