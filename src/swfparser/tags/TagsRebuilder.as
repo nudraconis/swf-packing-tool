@@ -71,7 +71,7 @@ package swfparser.tags
 			{
 				var currentSymbol:SWFSymbol = tag.symbols[i];
 				
-				if (currentSymbol.name.indexOf("fla") != -1)
+				if (currentSymbol.name.indexOf("_fla.") != -1)
 					continue;
 				
 				tagOut.length++;

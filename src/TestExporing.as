@@ -25,7 +25,7 @@ package
 	
 	public class TestExporing extends Sprite 
 	{
-		private var fileName:String = "testDeep";
+		private var fileName:String = "gem_mine";
 		
 		private var fileContent:ByteArray;
 		private var swfDataParser:SwfDataParser;

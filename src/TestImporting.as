@@ -26,7 +26,7 @@ package
 	 */
 	public class TestImporting extends Sprite 
 	{
-		private var fileName:String = "terrain_trash";
+		private var fileName:String = "bull_smith";
 		private var fileContent:FastByteArray;
 		private var swfExporter:SwfExporter = new SwfExporter();
 		private var testScene:TestScene;

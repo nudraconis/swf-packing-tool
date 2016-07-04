@@ -18,6 +18,8 @@ package
 	import flash.geom.Rectangle;
 	import flash.system.Capabilities;
 	import flash.ui.Keyboard;
+	import genome.drawer.GenomeDisplayListDrawer;
+	import genome.drawer.GenomeDrawer;
 	import swfdata.ColorData;
 	import swfdata.MovieClipData;
 	import swfdata.SpriteData;
@@ -37,13 +39,15 @@ package
 		
 		private var bounding:Rectangle = new Rectangle();
 		private var frame:int = 0;
-		private var size:Number = 1;
+		public var size:Number = 3;
 		private var ratio:Number = 0.0;
+		
+		private var outlineSize:Number = 1;
 		
 		private var backgroundBorder:BackgroundBorder;
 		private var color:ColorData = new ColorData();
 		
-		private var debugDrawer:DisplayListDrawer;
+		private var debugDrawer:GenomeDisplayListDrawer;
 		
 		private var sprite:SpriteData;
 		private var library:SymbolsLibrary
@@ -91,22 +95,32 @@ package
 		
 		private function onMouseWheel(e:MouseEvent):void 
 		{
-			var delta:Number = e.delta / (e.shiftKey? 5:50);
-			
-			var factor:Number = 3 / size;
-			
-			delta /= factor;
-			
-			var _size:Number = size;
-			_size += delta;
-			
-			if (_size < 0.5)
-				_size = 0.5;
+			if (e.ctrlKey == false)
+			{
+				var delta:Number = e.delta / (e.shiftKey? 5:50);
 				
-			if (_size > 3)
-				_size = 3;
+				var factor:Number = 3 / size;
 				
-			TweenLite.to(this, 0.15, { size:_size } );
+				delta /= factor;
+				
+				var _size:Number = size;
+				_size += delta;
+				
+				if (_size < 0.5)
+					_size = 0.5;
+					
+				if (_size > 3)
+					_size = 3;
+					
+				TweenLite.to(this, 0.15, { size:_size } );
+			}
+			else
+				outlineSize += e.delta / 100;
+				
+			trace(outlineSize);
+			
+			debugDrawer.hightlightSize = outlineSize;
+			//outline.outlineFactor = outlineSize;
 		}
 		
 		private function onMouseMove(e:MouseEvent):void 
@@ -223,7 +237,7 @@ package
 			this.library = library;
 			
 			
-			debugDrawer = new DisplayListDrawer(atlas, mousePoint);
+			debugDrawer = new GenomeDisplayListDrawer(atlas, mousePoint);
 			
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 			
@@ -369,6 +383,13 @@ package
 			sprite.transform.d = size;
 			
 			//trace("======draw=======");
+			debugDrawer.hightlight = true;
+			color.a = 1;
+			debugDrawer.drawDisplayObject(sprite, new Matrix(1, 0, 0, 1, cameraX, cameraY), bounding, color);
+			
+			bounding.setTo(0, 0, 0, 0);
+			debugDrawer.hightlight = false;
+			color.a = 1
 			debugDrawer.drawDisplayObject(sprite, new Matrix(1, 0, 0, 1, cameraX, cameraY), bounding, color);
 			//trace("=====end draw=====");
 			
