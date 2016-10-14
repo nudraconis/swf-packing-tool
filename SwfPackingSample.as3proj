@@ -17,12 +17,12 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="src" />
-    <class path="D:\panda\village-flash\branches\stage3d\libs\swfdata\src\main\actionscript" />
-    <class path="D:\panda\village-flash\branches\stage3d\libs\swfdrawer\src" />
-    <class path="D:\panda\village-flash\branches\stage3d\libs\fastByteArray\src\main\actionscript" />
-    <class path="D:\panda\village-flash\branches\stage3d\libs\swfparser\src\main\actionscript" />
-    <class path="D:\panda\village-flash\branches\stage3d\libs\as3swf\src" />
-    <class path="D:\panda\trunk\client\Tools\as\graphicscorelib\src" />
+    <class path="..\swfdata\src\main\actionscript" />
+    <class path="..\swfdrawer\src" />
+    <class path="..\fastByteArray\src\main\actionscript" />
+    <class path="..\swfparser\src\main\actionscript" />
+    <class path="..\as3swf\src" />
+    <class path="..\..\graphicscorelib\src" />
     <class path="D:\swf-packer-repo\utilityUi\src" />
     <class path="D:\swf-packer-repo\debugUtils\src" />
   </classpaths>
